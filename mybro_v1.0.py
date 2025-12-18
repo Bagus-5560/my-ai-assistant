@@ -1,6 +1,8 @@
 import sys
 import os
 import warnings
+import json  # <-- TAMBAHAN BUAT BACA KONTAK
+from dotenv import load_dotenv # <-- TAMBAHAN BUAT BACA API KEY
 
 # --- PEREDAM SUARA (SUPPRESS WARNINGS) ---
 warnings.filterwarnings("ignore") 
@@ -32,21 +34,31 @@ import pywhatkit
 # ==============================================================================
 BOT_NAME = "My Bro"
 VOICE_ID = "id-ID-ArdiNeural" 
-GEMINI_API_KEY = "AIzaSyCWyO74CF5M5ReVClEn_OvzEAV_fdo_20o" 
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
 
 # Setup Gemini
-try:
-    genai.configure(api_key=GEMINI_API_KEY)
-    model_gemini = genai.GenerativeModel('gemini-2.5-flash')
-    USE_GEMINI = True
-except:
-    print("Warning: Gemini Error.")
+if not GEMINI_API_KEY:
+    print("❌ ERROR: API Key tidak ditemukan di file .env!")
     USE_GEMINI = False
+else:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model_gemini = genai.GenerativeModel('gemini-2.5-flash')
+        USE_GEMINI = True
+    except:
+        print("⚠️ Gemini Error Konfigurasi.")
+        USE_GEMINI = False
 
-DAFTAR_KONTAK = {
-    "wahyu": "+6283133006690",
-    "budi": "+6281234567890"
-}
+# 2. AMBIL KONTAK DARI FILE JSON
+def muat_kontak():
+    try:
+        with open('kontak.json', 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        print("⚠️ File kontak.json tidak ditemukan! Fitur WA mungkin error.")
+        return {} # Balikin kamus kosong
+
+DAFTAR_KONTAK = muat_kontak()
 
 
 SYSTEM_PROMPT_LOCAL = """
